@@ -27,9 +27,25 @@ class AgentResponse(BaseModel):
     sources: List[Source] = Field(default_factory=list, description="List of sources used")
 #----------------------------------------------------------------------------
 # 3. DÜĞÜM FONKSİYONLARI (NODES)
+class SearchConfig(BaseModel):
+    max_results: int = Field(
+        description="Sorgunun karmaşıklığına göre 1-10 arası arama sonuç sayısı. "
+                    "Basit sorular için 2-3, detaylı araştırmalar için 5-10"
+    )
 def researcher_node(state: AgentState) -> dict:
     print("🔍 Araştırmacı çalışıyor...")
-    tavily = TavilySearch(max_results=5)
+    
+    # LLM sorgunun karmaşıklığına göre max_results belirliyor
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+    structured_llm = llm.with_structured_output(SearchConfig)
+    
+    config = structured_llm.invoke(
+        f"Bu sorgu için kaç arama sonucu gerekli? Sorgu: {state['query']}"
+    )
+    
+    print(f"📊 LLM {config.max_results} sonuç önerdi")
+    
+    tavily = TavilySearch(max_results=config.max_results)
     query = state["query"]
     results = tavily.invoke({"query": query})
     return {"research_data": str(results)}
@@ -37,11 +53,9 @@ def researcher_node(state: AgentState) -> dict:
 def writer_node(state: AgentState) -> dict:
     print("✍️ Yazar çalışıyor...")
     llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
-    düzeltme_sayacı=state.get("revision_count", 0)
-    önceki_özet=state.get("summary", "")
+    revision_count = state.get("revision_count", 0)
 
-    if düzeltme_sayacı > 0:
-        prompt = f"""
+    prompt = f"""
     You are an expert researcher. 
     Subject: {state['query']}
     Research Data: {state['research_data']}
@@ -58,33 +72,12 @@ def writer_node(state: AgentState) -> dict:
     - At the end of the summary, create a '### Kaynakça' section.
     - For each source, use this format: [Site Adı - Sayfa Başlığı](URL)
     - Example: [T.C. Cumhurbaşkanlığı](https://www.tccb.gov.tr)
-    
     """
-    else:
-        prompt = f"""
-    You are an expert researcher. 
-    Subject: {state['query']}
-    Research Data: {state['research_data']}
-
-    Please prepare a summary in TURKISH using MARKDOWN format.
-    Rules:
-    1. Use # for main title and ## for sections.
-    2. Use **bold** for technical terms.
-    3. Use bullet points for lists.
-    4. Keep technical depth but simplify the language.
-    5. Output must be at least 500 characters.
-
-    RULES for Links:
-    - At the end of the summary, create a '### Kaynakça' section.
-    - For each source, use this format: [Site Adı - Sayfa Başlığı](URL)
-    - Example: [T.C. Cumhurbaşkanlığı](https://www.tccb.gov.tr)
-    
-    """   
 
     response = llm.invoke([HumanMessage(content=prompt)])
     return {
         "summary": response.content,
-        "revision_count": düzeltme_sayacı + 1,
+        "revision_count": revision_count + 1,
         "messages": [response]
     }
 
