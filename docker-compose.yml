@@ -1,0 +1,17 @@
+services:
+  # ═══════════════════════════════════════════════════════════
+  #                    ARAŞTIRMA AJANI API
+  # ═══════════════════════════════════════════════════════════
+  api:
+    build: . # Dockerfile bu dizinde
+    container_name: arastirma_ajani_api # Container adı
+    ports:
+      - "8000:8000" # localhost:8000 -> container:8000
+    env_file:
+      - .env # API anahtarları
+    restart: unless-stopped # Çökerse yeniden başlat
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/saglik" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

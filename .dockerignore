@@ -1,0 +1,4 @@
+.venv/                    ## Yerel sanal ortam - container kendi ortamını oluşturur
+__pycache__/              ## Python cache - gereksiz
+.env                      ## Gizli anahtarlar - güvenlik için (env_file ile ayrı yüklenir)
+.git/                     ## Git geçmişi - gereksiz, image'ı şişirir

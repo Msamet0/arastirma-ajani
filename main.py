@@ -31,6 +31,7 @@ class SearchConfig(BaseModel):
     max_results: int = Field(
         description="Sorgunun karmaşıklığına göre 1-10 arası arama sonuç sayısı. "
                     "Basit sorular için 2-3, detaylı araştırmalar için 5-10"
+                    
     )
 def researcher_node(state: AgentState) -> dict:
     print("🔍 Araştırmacı çalışıyor...")
