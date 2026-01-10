@@ -3,15 +3,33 @@ services:
   #                    ARAŞTIRMA AJANI API
   # ═══════════════════════════════════════════════════════════
   api:
-    build: . # Dockerfile bu dizinde
-    container_name: arastirma_ajani_api # Container adı
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: arastirma_ajani_api
     ports:
-      - "8000:8000" # localhost:8000 -> container:8000
+      - "8000:8000"
     env_file:
-      - .env # API anahtarları
-    restart: unless-stopped # Çökerse yeniden başlat
+      - .env
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/saglik" ]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ═══════════════════════════════════════════════════════════
+  #                    ARAŞTIRMA AJANI ARAYÜZ (Streamlit)
+  # ═══════════════════════════════════════════════════════════
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: arastirma_ajani_ui
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - api

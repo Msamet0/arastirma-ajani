@@ -1,0 +1,21 @@
+# 1. Python 3.12 tabanlı imaj
+FROM python:3.12-slim
+
+# 2. uv paket yöneticisini yükle
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# 3. Çalışma dizini
+WORKDIR /app
+
+# 4. Bağımlılıkları kopyala ve yükle
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+
+# 5. Kaynak kodları kopyala
+COPY . .
+
+# 6. Streamlit için port aç
+EXPOSE 8501
+
+# 7. Streamlit uygulamasını başlat
+CMD ["uv", "run", "streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

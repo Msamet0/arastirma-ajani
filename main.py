@@ -37,7 +37,7 @@ def researcher_node(state: AgentState) -> dict:
     print("🔍 Araştırmacı çalışıyor...")
     
     # LLM sorgunun karmaşıklığına göre max_results belirliyor
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+    llm = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", temperature=0)
     structured_llm = llm.with_structured_output(SearchConfig)
     
     config = structured_llm.invoke(
